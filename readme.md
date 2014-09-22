@@ -1,5 +1,10 @@
 # AngularJS Testing Cheat Sheet
 
+### Contents
+[Unit testing routes](#routes)  
+[Unit testing controllers](#controllers)
+
+<a name="routes"/>
 ### Unit testing routes
 
 #### URLProvider
@@ -157,3 +162,84 @@ describe('Routes test with resolves', function() {
 	}));
 });
 ```
+<a name="controllers"/>
+### Unit testing controllers
+
+The controller is where we handle updating the views in our application. In setting up unit tests for controllers, 
+we need to make sure: 
+
+1. Set up our tests to mock the module.
+2. Store an instance of the controller with an instance of the known scope.
+3. Test our expectations against the scope.
+
+> **_Note:_**
+> Testing **_controllerAs_** syntax is different than controllers that use $scope. 
+> Here we're testing controllers that attaches data and method in the $scope object.
+
+Consider this simplistic controller
+
+```js
+angular.module('myApp', [])
+.controller('ListCtrl', ['$scope', function($scope){
+	$scope.items = [
+		{'id': 1, 'label': 'First', 'done': true},
+		{'id': 2, 'label': 'Second', 'done': false}
+	];
+
+	$scope.getDoneClass = function(item) {
+		return {
+			'finished': item.done,
+			'unfinished': !item.done
+		};
+	}
+}]);
+```
+
+All it does is assign an array to its instance (to make it available to the HTML), and then has a function to figure out the presentation logic, which returns the classes to apply based on the item’s done state. Given this controller, let us take a look at how a Jasmine spec for this might look like:
+
+```js
+describe('ListCtrl', function(){
+	// Mock the module myApp
+	beforeEach(module('myApp'));
+
+	var scope;
+
+	beforeEach(inject(function($controller, $rootScope){
+		// To instantiate a new controller instance, we need to create 
+		// a new instance of a scope from the $rootScope with the $new() method. 
+		// This new instance will set up the scope inheritance that Angular uses at run time.
+		// With this scope, we can instantiate a new controller and 
+		// pass the scope in as the $scope of the controller.
+		scope = $rootScope.$new();
+
+		// Create the new instance of the controller
+		$controller('ListCtrl', {'$scope' : scope});
+	}));
+
+	// We'll test the two features of our controller
+	// 1. The items data is populated on load
+	// 2. The 'getDoneClass' method returns object based on item argument
+
+	it('should have items available on load', function() {
+		expect(scope.items).toEqual([
+			{'id': 1, 'label': 'First', 'done': true},
+			{'id': 2, 'label': 'Second', 'done': false}
+		]);
+	});
+
+	it('should have highlight items based on state', function(){
+		var item = {'id': 1, 'label': 'First', 'done': true};
+
+		var actualClass = scope.getDoneClass(item);
+		expect(actualClass.finished).toBeTruthy();
+		expect(actualClass.unfinished).toBeFalsy();
+
+		item.done = false;
+		actualClass = scope.getDoneClass(item);
+		expect(actualClass.finished).toBeFalsy();
+		expect(actualClass.unfinished).toBeTruthy();
+	});
+
+});
+```
+

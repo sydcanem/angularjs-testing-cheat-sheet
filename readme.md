@@ -1,10 +1,12 @@
 # AngularJS Testing Cheat Sheet
 
 ### Contents
+
 [Unit testing routes](#routes)  
 [Unit testing controllers](#controllers)
 
 <a name="routes"/>
+
 ### Unit testing routes
 
 #### URLProvider
@@ -163,6 +165,7 @@ describe('Routes test with resolves', function() {
 });
 ```
 <a name="controllers"/>
+
 ### Unit testing controllers
 
 The controller is where we handle updating the views in our application. In setting up unit tests for controllers, 
